@@ -1926,11 +1926,6 @@ wl_cfg80211_change_virtual_iface(struct wiphy *wiphy, struct net_device *ndev,
 		} else if (ndev == bcmcfg_to_prmry_ndev(cfg) &&
 			!wl_get_drv_status(cfg, AP_CREATED, ndev)) {
 			wl_set_drv_status(cfg, AP_CREATING, ndev);
-			if (!cfg->ap_info &&
-				!(cfg->ap_info = kzalloc(sizeof(struct ap_info), GFP_KERNEL))) {
-				WL_ERR(("struct ap_saved_ie allocation failed\n"));
-				return -ENOMEM;
-			}
 		} else {
 			WL_ERR(("Cannot change the interface for GO or SOFTAP\n"));
 			return -EINVAL;
@@ -7698,6 +7693,14 @@ wl_cfg80211_start_ap(
 
 	if (!cfg)
 		return -EINVAL;
+
+	if (!cfg->ap_info) {
+		if(!(cfg->ap_info = kzalloc(sizeof(struct ap_info), GFP_KERNEL))) {
+			WL_ERR(("struct ap_saved_ie allocation failed\n"));
+			return -ENOMEM;
+		}
+		wl_set_drv_status(cfg, AP_CREATING, dev);
+	}
 
 	if (dev == bcmcfg_to_prmry_ndev(cfg)) {
 		WL_DBG(("Start AP req on primary iface: Softap\n"));
